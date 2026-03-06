@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PRIME ESTUDOS - Master Database</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+        :root { --bg: #0b0f1a; --surface: #161e2d; --primary: #3b82f6; --text: #f8fafc; --dim: #94a3b8; --border: rgba(59, 130, 246, 0.2); --success: #10b981; --danger: #ef4444; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { background: var(--bg); color: var(--text); margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        header { padding: 18px 20px; background: #0b0f1a; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-weight: 800; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px; }
+        .logo span { color: var(--primary); }
+        .mode-sw { display: flex; background: var(--surface); padding: 4px; border-radius: 12px; }
+        .m-btn { border: none; background: none; color: var(--dim); padding: 8px 12px; border-radius: 8px; font-size: 0.7rem; font-weight: 700; cursor: pointer; }
+        .m-btn.active { background: var(--primary); color: white; }
+        main { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 90px; }
+        .view { display: none; } .view.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .section-title { color: var(--dim); text-transform: uppercase; font-size: 0.65rem; letter-spacing: 2px; margin-bottom: 15px; font-weight: 800; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+        .card { background: var(--surface); border: 1px solid rgba(255,255,255,0.05); padding: 18px; border-radius: 18px; cursor: pointer; border-left: 4px solid var(--primary); }
+        .card h3 { margin: 0; font-size: 0.85rem; font-weight: 700; }
+        .q-box { background: var(--surface); padding: 22px; border-radius: 20px; border: 1px solid var(--border); margin-bottom: 15px; font-weight: 600; line-height: 1.5; }
+        .opt-wrap { position: relative; margin-bottom: 10px; }
+        .opt-btn { width: 100%; padding: 16px; background: #1e293b; border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 12px; text-align: left; font-size: 0.9rem; cursor: pointer; padding-right: 80px; }
+        .opt-btn.eliminated { opacity: 0.2; text-decoration: line-through; pointer-events: none; }
+        .btn-del { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: rgba(239, 68, 68, 0.1); border: 1px solid var(--danger); color: var(--danger); padding: 5px 8px; border-radius: 6px; font-size: 0.55rem; font-weight: 900; z-index: 10; }
+        .feed { display: none; padding: 15px; border-radius: 12px; margin-top: 15px; font-size: 0.85rem; border-left: 4px solid var(--primary); background: rgba(255,255,255,0.03); }
+        .action { width: 100%; background: var(--primary); color: white; border: none; padding: 18px; border-radius: 14px; font-weight: 800; cursor: pointer; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo">PRIME<span>ESTUDOS</span></div>
+    <div class="mode-sw">
+        <button id="b-est" class="m-btn active" onclick="setSys('estudante')">ESTUDANTE</button>
+        <button id="b-con" class="m-btn" onclick="setSys('concurseiro')">CONCURSO</button>
+    </div>
+</header>
+
+<main>
+    <div id="v-home" class="view active"><div id="h-title" class="section-title"></div><div id="h-grid" class="grid"></div></div>
+    <div id="v-list" class="view"><button onclick="goHome()" style="background:none;border:none;color:var(--primary);font-weight:800;margin-bottom:15px;">← VOLTAR</button><div id="l-title" class="section-title"></div><div id="l-grid" class="grid"></div></div>
+    <div id="v-quiz" class="view">
+        <div style="display:flex; justify-content:space-between; margin-bottom:10px;"><span id="q-tag" style="color:var(--primary); font-size:0.7rem; font-weight:800;"></span><span id="q-count" style="font-size:0.7rem; color:var(--dim);"></span></div>
+        <div id="q-text" class="q-box"></div>
+        <div id="o-box"></div>
+        <div id="feedback" class="feed"></div>
+        <button id="n-btn" class="action" style="display:none;" onclick="nextQ()">PRÓXIMA QUESTÃO</button>
+    </div>
+</main>
+
+<script>
+    const DB = {
+        // --- CONCURSOS ---
+        "Português FGV": [
+            {q: "Assinale a frase em que a concordância verbal está correta:", opts: ["Haviam muitos alunos", "Fazem dois meses", "Alugam-se vagas", "Sobrou problemas"], c: 2, r: "No caso de 'Alugam-se vagas', o sujeito é 'vagas', logo o verbo concorda no plural."},
+            {q: "O antônimo de 'efêmero' é:", opts: ["Passageiro", "Duradouro", "Curto", "Frágil"], c: 1, r: "Efêmero é algo que dura pouco. Duradouro é o oposto."},
+            {q: "Qual figura de linguagem em 'O jardim sorria'?", opts: ["Metáfora", "Personificação", "Hipérbole", "Ironia"], c: 1, r: "Personificação (ou prosopopeia) atribui características humanas a seres inanimados."}
+        ],
+        "Direito Administrativo": [
+            {q: "O princípio da 'Publicidade' exige que:", opts: ["Os atos sejam secretos", "Os atos sejam divulgados", "O governo esconda gastos", "Não haja transparência"], c: 1, r: "A publicidade garante a transparência e o controle social dos atos administrativos."},
+            {q: "A demissão de um servidor público é uma:", opts: ["Recompensa", "Sanção disciplinar", "Promoção", "Licença"], c: 1, r: "A demissão é a penalidade máxima aplicada em infrações graves."},
+            {q: "Qual poder permite à administração punir faltas funcionais?", opts: ["Poder de Polícia", "Poder Hierárquico", "Poder Disciplinar", "Poder Legislativo"], c: 2, r: "O Poder Disciplinar é o que fundamenta a aplicação de sanções internas."}
+        ],
+        "Segurança Patrimonial": [
+            {q: "O uso do colete balístico é considerado um:", opts: ["EPC", "EPI", "Acessório estético", "Item opcional"], c: 1, r: "É um Equipamento de Proteção Individual essencial para a segurança do agente."},
+            {q: "Ao detectar fumaça em um setor, o vigia deve:", opts: ["Correr", "Verificar e acionar o plano de emergência", "Ignorar", "Aguardar o amanhecer"], c: 1, r: "Ação rápida e comunicação são pilares da segurança patrimonial."}
+        ],
+        "LDB / Pedagógicos": [
+            {q: "Segundo a LDB, o ensino fundamental é:", opts: ["Obrigatório e gratuito", "Facultativo", "Apenas para ricos", "Pago na rede pública"], c: 0, r: "A LDB estabelece a obrigatoriedade e gratuidade do ensino fundamental."},
+            {q: "A carga horária mínima anual do Ensino Fundamental é de:", opts: ["600 horas", "800 horas", "1000 horas", "1200 horas"], c: 1, r: "São 800 horas distribuídas em, no mínimo, 200 dias de trabalho escolar."}
+        ],
+        // --- ESCOLA ---
+        "Matemática": [
+            {q: "Qual o valor de 25% de 200?", opts: ["25", "50", "75", "100"], c: 1, r: "25/100 * 200 = 50."},
+            {q: "A raiz quadrada de 144 é:", opts: ["10", "11", "12", "14"], c: 2, r: "12 x 12 = 144."}
+        ],
+        "Ciências": [
+            {q: "Qual órgão é responsável pela filtração do sangue?", opts: ["Coração", "Pulmão", "Rins", "Fígado"], c: 2, r: "Os rins filtram o sangue e produzem a urina."}
+        ],
+        "default": [{q: "Questão em desenvolvimento para este módulo.", opts: ["Opção A", "Opção B", "Opção C"], c: 0, r: "Estude o material base."}]
+    };
+
+    const ESTRUTURA = {
+        estudante: {
+            "Ensino Fundamental": ["6º Ano", "7º Ano", "8º Ano", "9º Ano"],
+            "Ensino Médio": ["1º Ano", "2º Ano", "3º Ano", "Simulado ENEM"]
+        },
+        concurseiro: {
+            "Administrativo": ["Português FGV", "Direito Administrativo", "Direito Constitucional", "Informática"],
+            "Segurança": ["Segurança Patrimonial", "Noções de Direito Penal", "Matemática Básica"],
+            "Educação": ["LDB / Pedagógicos", "Legislação Educacional", "Didática"],
+            "Trânsito": ["Legislação de Trânsito", "Direção Defensiva", "Mecânica Básica"]
+        }
+    };
+
+    let curSys = 'estudante', qIdx = 0, score = 0, activeQs = [], curSubject = "";
+
+    function setSys(s) {
+        curSys = s;
+        document.getElementById('b-est').classList.toggle('active', s === 'estudante');
+        document.getElementById('b-con').classList.toggle('active', s === 'concurseiro');
+        renderHome();
+    }
+
+    function renderHome() {
+        showView('v-home');
+        const grid = document.getElementById('h-grid'); grid.innerHTML = '';
+        document.getElementById('h-title').innerText = curSys === 'estudante' ? "Níveis Escolares" : "Áreas de Concurso";
+        
+        const data = curSys === 'estudante' ? ESTRUTURA.estudante : ESTRUTURA.concurseiro;
+        Object.keys(data).forEach(cat => {
+            grid.innerHTML += `<div class="card" onclick="renderList('${cat}')"><h3>${cat}</h3></div>`;
+        });
+    }
+
+    function renderList(cat) {
+        showView('v-list');
+        const grid = document.getElementById('l-grid'); grid.innerHTML = '';
+        document.getElementById('l-title').innerText = cat;
+        
+        const items = curSys === 'estudante' ? ESTRUTURA.estudante[cat] : ESTRUTURA.concurseiro[cat];
+        items.forEach(item => {
+            grid.innerHTML += `<div class="card" onclick="startQuiz('${item}')"><h3>${item}</h3></div>`;
+        });
+    }
+
+    function startQuiz(sub) {
+        curSubject = sub; qIdx = 0; score = 0;
+        showView('v-quiz');
+        // Pega as questões do banco ou usa o default
+        activeQs = DB[sub] || DB["default"];
+        loadQ();
+    }
+
+    function loadQ() {
+        const q = activeQs[qIdx % activeQs.length];
+        document.getElementById('q-tag').innerText = curSubject.toUpperCase();
+        document.getElementById('q-count').innerText = `${qIdx + 1}/${activeQs.length}`;
+        document.getElementById('q-text').innerText = q.q;
+        document.getElementById('feedback').style.display = 'none';
+        document.getElementById('n-btn').style.display = 'none';
+
+        const box = document.getElementById('o-box'); box.innerHTML = '';
+        q.opts.forEach((opt, i) => {
+            const wrap = document.createElement('div');
+            wrap.className = 'opt-wrap';
+            wrap.innerHTML = `<button class="opt-btn" id="o-${i}" onclick="check(${i})">${opt}</button>
+                              <button class="btn-del" onclick="event.stopPropagation(); this.parentElement.querySelector('.opt-btn').classList.toggle('eliminated')">RISCAR</button>`;
+            box.appendChild(wrap);
+        });
+    }
+
+    function check(i) {
+        const q = activeQs[qIdx % activeQs.length];
+        const f = document.getElementById('feedback');
+        document.querySelectorAll('.opt-btn').forEach(b => b.onclick = null);
+
+        if(i === q.c) { score++; f.innerHTML = `<b style="color:var(--success)">CORRETO!</b><br>${q.r}`; }
+        else { f.innerHTML = `<b style="color:var(--danger)">ERRADO.</b><br>${q.r}`; }
+        
+        f.style.display = 'block';
+        document.getElementById('n-btn').style.display = 'block';
+    }
+
+    function nextQ() {
+        qIdx++;
+        if(qIdx < activeQs.length) loadQ();
+        else { alert(`Simulado Concluído! Acertos: ${score}/${activeQs.length}`); renderHome(); }
+    }
+
+    function showView(id) { document.querySelectorAll('.view').forEach(v => v.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+    function goHome() { renderHome(); }
+    window.onload = () => setSys('estudante');
+</script>
+</body>
+</html>
